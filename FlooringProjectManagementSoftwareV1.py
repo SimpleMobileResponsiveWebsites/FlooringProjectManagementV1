@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 
 # Initialize session state
 if 'projects' not in st.session_state:
@@ -10,29 +11,30 @@ if 'people' not in st.session_state:
     st.session_state['people'] = []
 if 'clients' not in st.session_state:
     st.session_state['clients'] = []
-if 'client_id' not in st.session_state:
-    st.session_state['client_id'] = 0
+if 'expenses' not in st.session_state:
+    st.session_state['expenses'] = []
 
 def add_project():
     client_name = st.session_state.project_client_name_input
-    client_id = None
-    for client in st.session_state['clients']:
-        if client['name'] == client_name:
-            client_id = client['client_id']
-            break
-    if client_id is not None:
-        st.session_state['projects'].append({
-            'name': st.session_state.project_name_input,
-            'description': st.session_state.project_description_input,
-            'assigned_to': st.session_state.project_assigned_to_input,
-            'priority': st.session_state.project_priority_input,
-            'estimate_hours': st.session_state.project_estimate_hours_input,
-            'client_id': client_id
+    if client_name not in [client['client_name'] for client in st.session_state['clients']]:
+        client_id = len(st.session_state['clients']) + 1
+        st.session_state['clients'].append({
+            'client_id': client_id,
+            'client_name': client_name,
         })
-        st.success(f"Project '{st.session_state.project_name_input}' added successfully")
-        st.session_state.clear_project_inputs = True
     else:
-        st.error("Selected client not found")
+        client_id = next(client['client_id'] for client in st.session_state['clients'] if client['client_name'] == client_name)
+
+    st.session_state['projects'].append({
+        'name': st.session_state.project_name_input,
+        'description': st.session_state.project_description_input,
+        'assigned_to': st.session_state.project_assigned_to_input,
+        'priority': st.session_state.project_priority_input,
+        'estimate_hours': st.session_state.project_estimate_hours_input,
+        'client_id': client_id
+    })
+    st.success(f"Project '{st.session_state.project_name_input}' added successfully")
+    st.session_state.clear_project_inputs = True
 
 def add_task():
     st.session_state['tasks'].append({
@@ -52,26 +54,14 @@ def add_person():
     st.success(f"Person '{st.session_state.person_name_input}' added successfully")
     st.session_state.clear_person_input = True
 
-def add_client():
-    st.session_state['clients'].append({
-        'client_id': st.session_state.client_id,
-        'name': st.session_state.client_name_input,
-        'address': st.session_state.client_address_input,
-        'email': st.session_state.client_email_input,
-        'phone': st.session_state.client_phone_input
-    })
-    st.session_state.client_id += 1
-    st.success(f"Client '{st.session_state.client_name_input}' added successfully")
-    st.session_state.clear_client_inputs = True
-
 def view_projects():
     if st.session_state['projects']:
         projects_df = pd.DataFrame(st.session_state['projects'])
         clients_df = pd.DataFrame(st.session_state['clients'])
-
-        projects_df['client_id'] = projects_df['client_id'].astype('Int64')
-        merged_df = pd.merge(projects_df, clients_df, on='client_id', how='left')
-        st.write(merged_df)
+        projects_df['client_id'] = projects_df['client_id'].astype(int)
+        clients_df['client_id'] = clients_df['client_id'].astype(int)
+        merged_df = pd.merge(projects_df, clients_df, left_on='client_id', right_on='client_id', how='left')
+        st.write(merged_df.drop(columns=['client_id']))
     else:
         st.info("No projects added yet.")
 
@@ -82,15 +72,54 @@ def view_tasks():
     else:
         st.info("No tasks added yet.")
 
+def add_expense():
+    st.session_state['expenses'].append({
+        'expense_name': st.session_state.expense_name_input,
+        'cost': st.session_state.expense_cost_input,
+        'quantity': st.session_state.expense_quantity_input,
+        'total_cost': st.session_state.expense_cost_input * st.session_state.expense_quantity_input
+    })
+    st.success(f"Expense '{st.session_state.expense_name_input}' added successfully")
+    st.session_state.clear_expense_inputs = True
+
+def view_expenses():
+    if st.session_state['expenses']:
+        df = pd.DataFrame(st.session_state['expenses'])
+        st.write(df)
+    else:
+        st.info("No expenses added yet.")
+
 def export_data():
     projects_df = pd.DataFrame(st.session_state['projects'])
     tasks_df = pd.DataFrame(st.session_state['tasks'])
     return projects_df.to_csv(index=False), tasks_df.to_csv(index=False)
 
+def add_client():
+    client_id = len(st.session_state['clients']) + 1
+    st.session_state['clients'].append({
+        'client_id': client_id,
+        'client_name': st.session_state.client_name_input,
+        'client_address': st.session_state.client_address_input,
+        'client_email': st.session_state.client_email_input,
+        'client_phone': st.session_state.client_phone_input
+    })
+    st.success(f"Client '{st.session_state.client_name_input}' added successfully")
+    st.session_state.clear_client_inputs = True
+
 def main():
     st.title("Advanced Project Management App")
 
-    menu = ["Add Person", "Client Information", "Add Project", "View Projects", "Add Task", "View Tasks", "Export Data"]
+    menu = [
+        "Add Person",
+        "Add Client Information",
+        "Add Project",
+        "View Projects",
+        "Add Task",
+        "View Tasks",
+        "Add Expenses",
+        "View Expenses",
+        "Export Data"
+    ]
     choice = st.sidebar.selectbox("Menu", menu)
 
     if choice == "Add Person":
@@ -103,8 +132,9 @@ def main():
             st.text_input("Person Name", key='person_name_input')
             st.form_submit_button(label='Add Person', on_click=add_person)
 
-    elif choice == "Client Information":
+    elif choice == "Add Client Information":
         st.header('Customer/Client Details')
+        st.subheader('Add New Client')
         if st.session_state.get('clear_client_inputs', False):
             st.session_state.client_name_input = ''
             st.session_state.client_address_input = ''
@@ -136,8 +166,8 @@ def main():
             st.selectbox("Assigned To", [''] + st.session_state['people'], key='project_assigned_to_input')
             st.selectbox("Priority", ['Low', 'Medium', 'High'], key='project_priority_input')
             st.number_input("Estimated Hours", min_value=0.0, step=0.5, key='project_estimate_hours_input')
-            client_options = [client['name'] for client in st.session_state['clients']]
-            st.selectbox("Client", client_options, key='project_client_name_input')
+            st.selectbox("Client", [''] + [client['client_name'] for client in st.session_state['clients']],
+                         key='project_client_name_input')
             st.form_submit_button(label='Add Project', on_click=add_project)
 
     elif choice == "View Projects":
@@ -172,6 +202,24 @@ def main():
     elif choice == "View Tasks":
         st.subheader("View Tasks")
         view_tasks()
+
+    elif choice == "Add Expenses":
+        st.subheader("Add New Expense")
+        if st.session_state.get('clear_expense_inputs', False):
+            st.session_state.expense_name_input = ''
+            st.session_state.expense_cost_input = 0.0
+            st.session_state.expense_quantity_input = 0
+            st.session_state.clear_expense_inputs = False
+
+        with st.form(key='add_expense_form'):
+            st.text_input("Expense Name", key='expense_name_input')
+            st.number_input("Cost", min_value=0.0, step=0.01, key='expense_cost_input')
+            st.number_input("Quantity", min_value=1, step=1, key='expense_quantity_input')
+            st.form_submit_button(label='Add Expense', on_click=add_expense)
+
+    elif choice == "View Expenses":
+        st.subheader("View Expenses")
+        view_expenses()
 
     elif choice == "Export Data":
         st.subheader("Export Data to CSV")
