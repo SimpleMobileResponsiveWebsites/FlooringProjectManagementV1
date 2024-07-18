@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime, time
 
 # Initialize session state
 if 'projects' not in st.session_state:
@@ -76,16 +77,15 @@ if 'clear_expense_inputs' not in st.session_state:
     st.session_state.clear_expense_inputs = False
 
 if 'mileage_start_time_input' not in st.session_state:
-    st.session_state.mileage_start_time_input = ''
+    st.session_state.mileage_start_time_input = time(0, 0)
 if 'mileage_end_time_input' not in st.session_state:
-    st.session_state.mileage_end_time_input = ''
+    st.session_state.mileage_end_time_input = time(0, 0)
 if 'mileage_starting_mileage_input' not in st.session_state:
-    st.session_state.mileage_starting_mileage_input = ''
+    st.session_state.mileage_starting_mileage_input = 0.0
 if 'mileage_ending_mileage_input' not in st.session_state:
-    st.session_state.mileage_ending_mileage_input = ''
+    st.session_state.mileage_ending_mileage_input = 0.0
 if 'clear_mileage_inputs' not in st.session_state:
     st.session_state.clear_mileage_inputs = False
-
 
 def add_project():
     client_name = st.session_state.project_client_name_input
@@ -96,8 +96,7 @@ def add_project():
             'client_name': client_name,
         })
     else:
-        client_id = next(
-            client['client_id'] for client in st.session_state['clients'] if client['client_name'] == client_name)
+        client_id = next(client['client_id'] for client in st.session_state['clients'] if client['client_name'] == client_name)
 
     st.session_state['projects'].append({
         'name': st.session_state.project_name_input,
@@ -109,7 +108,6 @@ def add_project():
     })
     st.success(f"Project '{st.session_state.project_name_input}' added successfully")
     st.session_state.clear_project_inputs = True
-
 
 def add_task():
     st.session_state['tasks'].append({
@@ -124,12 +122,10 @@ def add_task():
     st.success(f"Task '{st.session_state.task_name_input}' added successfully")
     st.session_state.clear_task_inputs = True
 
-
 def add_person():
     st.session_state['people'].append(st.session_state.person_name_input)
     st.success(f"Person '{st.session_state.person_name_input}' added successfully")
     st.session_state.clear_person_input = True
-
 
 def view_projects():
     if st.session_state['projects']:
@@ -142,14 +138,12 @@ def view_projects():
     else:
         st.info("No projects added yet.")
 
-
 def view_tasks():
     if st.session_state['tasks']:
         df = pd.DataFrame(st.session_state['tasks'])
         st.write(df)
     else:
         st.info("No tasks added yet.")
-
 
 def add_expense():
     st.session_state['expenses'].append({
@@ -162,7 +156,6 @@ def add_expense():
     st.success(f"Expense '{st.session_state.expense_name_input}' added successfully")
     st.session_state.clear_expense_inputs = True
 
-
 def view_expenses():
     if st.session_state['expenses']:
         df = pd.DataFrame(st.session_state['expenses'])
@@ -170,22 +163,15 @@ def view_expenses():
     else:
         st.info("No expenses added yet.")
 
-
 def add_mileage():
-    start_time = st.session_state.mileage_start_time_input
-    end_time = st.session_state.mileage_end_time_input
-    starting_mileage = st.session_state.mileage_starting_mileage_input
-    ending_mileage = st.session_state.mileage_ending_mileage_input
-
     st.session_state['mileage'].append({
-        'start_time': start_time,
-        'end_time': end_time,
-        'starting_mileage': starting_mileage,
-        'ending_mileage': ending_mileage
+        'start_time': st.session_state.mileage_start_time_input,
+        'end_time': st.session_state.mileage_end_time_input,
+        'starting_mileage': st.session_state.mileage_starting_mileage_input,
+        'ending_mileage': st.session_state.mileage_ending_mileage_input
     })
     st.success("Mileage record added successfully")
     st.session_state.clear_mileage_inputs = True
-
 
 def view_mileage():
     if st.session_state['mileage']:
@@ -194,7 +180,6 @@ def view_mileage():
     else:
         st.info("No mileage records added yet.")
 
-
 def export_data():
     projects_df = pd.DataFrame(st.session_state['projects'])
     tasks_df = pd.DataFrame(st.session_state['tasks'])
@@ -202,7 +187,6 @@ def export_data():
     mileage_df = pd.DataFrame(st.session_state['mileage'])
     return (projects_df.to_csv(index=False), tasks_df.to_csv(index=False),
             expenses_df.to_csv(index=False), mileage_df.to_csv(index=False))
-
 
 def add_client():
     client_id = len(st.session_state['clients']) + 1
@@ -216,21 +200,22 @@ def add_client():
     st.success(f"Client '{st.session_state.client_name_input}' added successfully")
     st.session_state.clear_client_inputs = True
 
-
-def view_clients():
-    if st.session_state['clients']:
-        df = pd.DataFrame(st.session_state['clients'])
-        st.write(df)
-    else:
-        st.info("No clients added yet.")
-
-
 def main():
-    st.title("Project Management App")
+    st.title("Flooring Installation Project Management Software")
 
-    menu = ["Add Person", "View People", "Add Client", "View Clients",
-            "Add Project", "View Projects", "Add Task", "View Tasks",
-            "Add Expense", "View Expenses", "Add Mileage", "View Mileage", "Export Data"]
+    menu = [
+        "Add Person",
+        "Add Client Information",
+        "Add Project",
+        "View Projects",
+        "Add Task",
+        "View Tasks",
+        "Add Expenses",
+        "View Expenses",
+        "Add Mileage",
+        "View Mileage",
+        "Export Data"
+    ]
     choice = st.sidebar.selectbox("Menu", menu)
 
     if choice == "Add Person":
@@ -239,19 +224,13 @@ def main():
             st.session_state.person_name_input = ''
             st.session_state.clear_person_input = False
 
-        st.session_state.person_name_input = st.text_input("Person Name")
-        if st.button("Add Person"):
-            add_person()
+        with st.form(key='add_person_form'):
+            st.text_input("Person Name", key='person_name_input')
+            st.form_submit_button(label='Add Person', on_click=add_person)
 
-    elif choice == "View People":
-        st.subheader("View People")
-        if st.session_state['people']:
-            st.write(st.session_state['people'])
-        else:
-            st.info("No people added yet.")
-
-    elif choice == "Add Client":
-        st.subheader("Add New Client")
+    elif choice == "Add Client Information":
+        st.header('Customer/Client Details')
+        st.subheader('Add New Client')
         if st.session_state.get('clear_client_inputs', False):
             st.session_state.client_name_input = ''
             st.session_state.client_address_input = ''
@@ -259,16 +238,12 @@ def main():
             st.session_state.client_phone_input = ''
             st.session_state.clear_client_inputs = False
 
-        st.session_state.client_name_input = st.text_input("Client Name")
-        st.session_state.client_address_input = st.text_area("Client Address")
-        st.session_state.client_email_input = st.text_input("Client Email")
-        st.session_state.client_phone_input = st.text_input("Client Phone")
-        if st.button("Add Client"):
-            add_client()
-
-    elif choice == "View Clients":
-        st.subheader("View Clients")
-        view_clients()
+        with st.form(key='add_client_form'):
+            st.text_input("Client Name", key='client_name_input')
+            st.text_input("Client Address", key='client_address_input')
+            st.text_input("Client Email", key='client_email_input')
+            st.text_input("Client Phone", key='client_phone_input')
+            st.form_submit_button(label='Add Client', on_click=add_client)
 
     elif choice == "Add Project":
         st.subheader("Add New Project")
@@ -281,16 +256,15 @@ def main():
             st.session_state.project_client_name_input = ''
             st.session_state.clear_project_inputs = False
 
-        st.session_state.project_name_input = st.text_input("Project Name")
-        st.session_state.project_description_input = st.text_area("Project Description")
-        st.session_state.project_assigned_to_input = st.text_input("Assigned To")
-        st.session_state.project_priority_input = st.selectbox("Priority", ["Low", "Medium", "High"])
-        st.session_state.project_estimate_hours_input = st.number_input("Estimated Hours", min_value=0.0, step=0.1)
-        st.session_state.project_client_name_input = st.selectbox("Client Name",
-                                                                  options=[client['client_name'] for client in
-                                                                           st.session_state['clients']])
-        if st.button("Add Project"):
-            add_project()
+        with st.form(key='add_project_form'):
+            st.text_input("Project Name", key='project_name_input')
+            st.text_area("Project Description", key='project_description_input')
+            st.selectbox("Assigned To", [''] + st.session_state['people'], key='project_assigned_to_input')
+            st.selectbox("Priority", ['Low', 'Medium', 'High'], key='project_priority_input')
+            st.number_input("Estimated Hours", min_value=0.0, step=0.5, key='project_estimate_hours_input')
+            st.selectbox("Client", [''] + [client['client_name'] for client in st.session_state['clients']],
+                         key='project_client_name_input')
+            st.form_submit_button(label='Add Project', on_click=add_project)
 
     elif choice == "View Projects":
         st.subheader("View Projects")
@@ -298,33 +272,34 @@ def main():
 
     elif choice == "Add Task":
         st.subheader("Add New Task")
-        if st.session_state.get('clear_task_inputs', False):
-            st.session_state.task_name_input = ''
-            st.session_state.task_description_input = ''
-            st.session_state.task_status_input = 'Not Started'
-            st.session_state.task_assigned_to_input = ''
-            st.session_state.task_priority_input = 'Low'
-            st.session_state.task_estimate_hours_input = 0.0
-            st.session_state.task_project_name_input = ''
-            st.session_state.clear_task_inputs = False
+        if not st.session_state['projects']:
+            st.warning("Please add a project first.")
+        else:
+            if st.session_state.get('clear_task_inputs', False):
+                st.session_state.task_name_input = ''
+                st.session_state.task_description_input = ''
+                st.session_state.task_status_input = 'Not Started'
+                st.session_state.task_assigned_to_input = ''
+                st.session_state.task_priority_input = 'Low'
+                st.session_state.task_estimate_hours_input = 0.0
+                st.session_state.clear_task_inputs = False
 
-        st.session_state.task_name_input = st.text_input("Task Name")
-        st.session_state.task_description_input = st.text_area("Task Description")
-        st.session_state.task_status_input = st.selectbox("Status", ["Not Started", "In Progress", "Completed"])
-        st.session_state.task_assigned_to_input = st.text_input("Assigned To")
-        st.session_state.task_priority_input = st.selectbox("Priority", ["Low", "Medium", "High"])
-        st.session_state.task_estimate_hours_input = st.number_input("Estimated Hours", min_value=0.0, step=0.1)
-        st.session_state.task_project_name_input = st.selectbox("Project Name",
-                                                                options=[project['name'] for project in
-                                                                         st.session_state['projects']])
-        if st.button("Add Task"):
-            add_task()
+            with st.form(key='add_task_form'):
+                st.selectbox("Select Project", [''] + [project['name'] for project in st.session_state['projects']],
+                             key='task_project_name_input')
+                st.text_input("Task Name", key='task_name_input')
+                st.text_area("Task Description", key='task_description_input')
+                st.selectbox("Status", ["Not Started", "In Progress", "Completed"], key='task_status_input')
+                st.selectbox("Assigned To", [''] + st.session_state['people'], key='task_assigned_to_input')
+                st.selectbox("Priority", ['Low', 'Medium', 'High'], key='task_priority_input')
+                st.number_input("Estimated Hours", min_value=0.0, step=0.5, key='task_estimate_hours_input')
+                st.form_submit_button(label='Add Task', on_click=add_task)
 
     elif choice == "View Tasks":
         st.subheader("View Tasks")
         view_tasks()
 
-    elif choice == "Add Expense":
+    elif choice == "Add Expenses":
         st.subheader("Add New Expense")
         if st.session_state.get('clear_expense_inputs', False):
             st.session_state.expense_name_input = ''
@@ -333,45 +308,55 @@ def main():
             st.session_state.expense_website_link_input = ''
             st.session_state.clear_expense_inputs = False
 
-        st.session_state.expense_name_input = st.text_input("Expense Name")
-        st.session_state.expense_cost_input = st.number_input("Cost per Unit", min_value=0.0, step=0.01)
-        st.session_state.expense_quantity_input = st.number_input("Quantity", min_value=0, step=1)
-        st.session_state.expense_website_link_input = st.text_input("Website Link (Optional)")
-        if st.button("Add Expense"):
-            add_expense()
+        with st.form(key='add_expense_form'):
+            st.text_input("Expense Name", key='expense_name_input')
+            st.number_input("Cost", min_value=0.0, step=0.01, key='expense_cost_input')
+            st.number_input("Quantity", min_value=1, step=1, key='expense_quantity_input')
+            st.text_input("Website Link", key='expense_website_link_input')
+            st.form_submit_button(label='Add Expense', on_click=add_expense)
 
     elif choice == "View Expenses":
         st.subheader("View Expenses")
         view_expenses()
 
-    elif choice == "Add Mileage":
-        st.subheader("Add New Mileage")
-        if st.session_state.get('clear_mileage_inputs', False):
-            st.session_state.mileage_start_time_input = ''
-            st.session_state.mileage_end_time_input = ''
-            st.session_state.mileage_starting_mileage_input = ''
-            st.session_state.mileage_ending_mileage_input = ''
-            st.session_state.clear_mileage_inputs = False
 
-        st.session_state.mileage_start_time_input = st.text_input("Start Time (in hours since midnight)")
-        st.session_state.mileage_end_time_input = st.text_input("End Time (in hours since midnight)")
-        st.session_state.mileage_starting_mileage_input = st.text_input("Starting Mileage")
-        st.session_state.mileage_ending_mileage_input = st.text_input("Ending Mileage")
+    elif choice == "Add Mileage":
+
+        st.subheader("Add Mileage")
+
+        st.session_state.mileage_start_time_input = st.text_input("Start Time")
+
+        st.session_state.mileage_end_time_input = st.text_input("End Time")
+
+        st.session_state.mileage_starting_mileage_input = st.number_input("Starting Mileage", min_value=0, step=1)
+
+        st.session_state.mileage_ending_mileage_input = st.number_input("Ending Mileage", min_value=0, step=1)
+
         if st.button("Add Mileage"):
             add_mileage()
+
+        if st.session_state.clear_mileage_inputs:
+            st.session_state.mileage_start_time_input = ''
+
+            st.session_state.mileage_end_time_input = ''
+
+            st.session_state.mileage_starting_mileage_input = 0
+
+            st.session_state.mileage_ending_mileage_input = 0
+
+            st.session_state.clear_mileage_inputs = False
 
     elif choice == "View Mileage":
         st.subheader("View Mileage")
         view_mileage()
 
     elif choice == "Export Data":
-        st.subheader("Export Data")
-        if st.button("Export"):
-            with st.spinner('Exporting data...'):
-                projects_csv, tasks_csv, expenses_csv, mileage_csv = export_data()
-            st.success("Data exported successfully!")
+        st.subheader("Export Data to CSV")
+        projects_csv, tasks_csv, expenses_csv, mileage_csv = export_data()
+        st.download_button(label="Download Projects CSV", data=projects_csv, file_name='projects.csv', mime='text/csv')
+        st.download_button(label="Download Tasks CSV", data=tasks_csv, file_name='tasks.csv', mime='text/csv')
+        st.download_button(label="Download Expenses CSV", data=expenses_csv, file_name='expenses.csv', mime='text/csv')
+        st.download_button(label="Download Mileage CSV", data=mileage_csv, file_name='mileage.csv', mime='text/csv')
 
-    # Remaining code omitted for brevity...
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
