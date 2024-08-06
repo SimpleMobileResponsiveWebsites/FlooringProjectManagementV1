@@ -34,8 +34,7 @@ def add_project():
     })
     st.success(f"Project '{st.session_state.project_name_input}' added successfully")
     st.session_state.clear_project_inputs = True
-
-    view_projects()  # Show the updated list of projects
+    st.write(st.session_state['projects'])
 
 def add_task():
     st.session_state['tasks'].append({
@@ -49,13 +48,37 @@ def add_task():
     })
     st.success(f"Task '{st.session_state.task_name_input}' added successfully")
     st.session_state.clear_task_inputs = True
-
-    view_tasks()  # Show the updated list of tasks
+    st.write(st.session_state['tasks'])
 
 def add_person():
     st.session_state['people'].append(st.session_state.person_name_input)
     st.success(f"Person '{st.session_state.person_name_input}' added successfully")
     st.session_state.clear_person_input = True
+    st.write(st.session_state['people'])
+
+def add_client():
+    client_id = len(st.session_state['clients']) + 1
+    st.session_state['clients'].append({
+        'client_id': client_id,
+        'client_name': st.session_state.client_name_input,
+        'client_address': st.session_state.client_address_input,
+        'client_email': st.session_state.client_email_input,
+        'client_phone': st.session_state.client_phone_input
+    })
+    st.success(f"Client '{st.session_state.client_name_input}' added successfully")
+    st.session_state.clear_client_inputs = True
+    st.write(st.session_state['clients'])
+
+def add_expense():
+    st.session_state['expenses'].append({
+        'expense_name': st.session_state.expense_name_input,
+        'cost': st.session_state.expense_cost_input,
+        'quantity': st.session_state.expense_quantity_input,
+        'total_cost': st.session_state.expense_cost_input * st.session_state.expense_quantity_input
+    })
+    st.success(f"Expense '{st.session_state.expense_name_input}' added successfully")
+    st.session_state.clear_expense_inputs = True
+    st.write(st.session_state['expenses'])
 
 def view_projects():
     if st.session_state['projects']:
@@ -75,18 +98,6 @@ def view_tasks():
     else:
         st.info("No tasks added yet.")
 
-def add_expense():
-    st.session_state['expenses'].append({
-        'expense_name': st.session_state.expense_name_input,
-        'cost': st.session_state.expense_cost_input,
-        'quantity': st.session_state.expense_quantity_input,
-        'total_cost': st.session_state.expense_cost_input * st.session_state.expense_quantity_input
-    })
-    st.success(f"Expense '{st.session_state.expense_name_input}' added successfully")
-    st.session_state.clear_expense_inputs = True
-
-    view_expenses()  # Show the updated list of expenses
-
 def view_expenses():
     if st.session_state['expenses']:
         df = pd.DataFrame(st.session_state['expenses'])
@@ -97,22 +108,11 @@ def view_expenses():
 def export_data():
     projects_df = pd.DataFrame(st.session_state['projects'])
     tasks_df = pd.DataFrame(st.session_state['tasks'])
-    return projects_df.to_csv(index=False), tasks_df.to_csv(index=False)
-
-def add_client():
-    client_id = len(st.session_state['clients']) + 1
-    st.session_state['clients'].append({
-        'client_id': client_id,
-        'client_name': st.session_state.client_name_input,
-        'client_address': st.session_state.client_address_input,
-        'client_email': st.session_state.client_email_input,
-        'client_phone': st.session_state.client_phone_input
-    })
-    st.success(f"Client '{st.session_state.client_name_input}' added successfully")
-    st.session_state.clear_client_inputs = True
+    expenses_df = pd.DataFrame(st.session_state['expenses'])
+    return projects_df.to_csv(index=False), tasks_df.to_csv(index=False), expenses_df.to_csv(index=False)
 
 def main():
-    st.title("*FREE Contractor Management Tool")
+    st.title("Project Management App v1.02")
 
     with st.expander("Add New Person"):
         if st.session_state.get('clear_person_input', False):
@@ -205,9 +205,10 @@ def main():
         view_expenses()
 
     with st.expander("Export Data"):
-        projects_csv, tasks_csv = export_data()
+        projects_csv, tasks_csv, expenses_csv = export_data()
         st.download_button(label="Download Projects CSV", data=projects_csv, file_name='projects.csv', mime='text/csv')
         st.download_button(label="Download Tasks CSV", data=tasks_csv, file_name='tasks.csv', mime='text/csv')
+        st.download_button(label="Download Expenses CSV", data=expenses_csv, file_name='expenses.csv', mime='text/csv')
 
 if __name__ == "__main__":
     main()
