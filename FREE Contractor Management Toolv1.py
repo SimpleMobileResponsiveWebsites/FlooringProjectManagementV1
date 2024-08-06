@@ -35,6 +35,8 @@ def add_project():
     st.success(f"Project '{st.session_state.project_name_input}' added successfully")
     st.session_state.clear_project_inputs = True
 
+    view_projects()  # Show the updated list of projects
+
 def add_task():
     st.session_state['tasks'].append({
         'project_name': st.session_state.task_project_name_input,
@@ -47,6 +49,8 @@ def add_task():
     })
     st.success(f"Task '{st.session_state.task_name_input}' added successfully")
     st.session_state.clear_task_inputs = True
+
+    view_tasks()  # Show the updated list of tasks
 
 def add_person():
     st.session_state['people'].append(st.session_state.person_name_input)
@@ -81,6 +85,8 @@ def add_expense():
     st.success(f"Expense '{st.session_state.expense_name_input}' added successfully")
     st.session_state.clear_expense_inputs = True
 
+    view_expenses()  # Show the updated list of expenses
+
 def view_expenses():
     if st.session_state['expenses']:
         df = pd.DataFrame(st.session_state['expenses'])
@@ -106,7 +112,7 @@ def add_client():
     st.session_state.clear_client_inputs = True
 
 def main():
-    st.title("Advanced Project Management App")
+    st.title("*FREE Contractor Management Tool")
 
     with st.expander("Add New Person"):
         if st.session_state.get('clear_person_input', False):
